@@ -161,6 +161,114 @@ TBLPROPERTIES (
 );
 
 -- -----------------------------------------------------------------------------
--- Camadas SILVER e GOLD: schemas ja criados acima; tabelas a definir quando as
--- regras de negocio e as transformacoes forem implementadas.
+-- Camada SILVER: mesmo schema da bronze, sem as colunas de controle de
+-- ingestao (_source_file, _ingested_at) e sem duplicatas.
+-- fiz o dedup (via ROW_NUMBER particionado pela chave natural de cada dataset) no
+-- notebook src/load_silver.ipynb, na carga da bronze para a silver.
+-- -----------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS yelp_dataset.silver.business (
+  business_id   STRING,
+  name          STRING,
+  address       STRING,
+  city          STRING,
+  state         STRING,
+  postal_code   STRING,
+  latitude      DOUBLE,
+  longitude     DOUBLE,
+  stars         DOUBLE,
+  review_count  BIGINT,
+  is_open       BIGINT,
+  attributes    STRING,
+  categories    STRING,
+  hours         STRING
+)
+USING DELTA
+CLUSTER BY (business_id)
+TBLPROPERTIES (
+  'delta.enableChangeDataFeed' = 'true',
+  'delta.autoOptimize.optimizeWrite' = 'true',
+  'delta.autoOptimize.autoCompact' = 'true'
+);
+
+CREATE TABLE IF NOT EXISTS yelp_dataset.silver.review (
+  review_id     STRING,
+  user_id       STRING,
+  business_id   STRING,
+  stars         DOUBLE,
+  useful        BIGINT,
+  funny         BIGINT,
+  cool          BIGINT,
+  text          STRING,
+  date          TIMESTAMP
+)
+USING DELTA
+CLUSTER BY (business_id)
+TBLPROPERTIES (
+  'delta.enableChangeDataFeed' = 'true',
+  'delta.autoOptimize.optimizeWrite' = 'true',
+  'delta.autoOptimize.autoCompact' = 'true'
+);
+
+CREATE TABLE IF NOT EXISTS yelp_dataset.silver.user (
+  user_id             STRING,
+  name                STRING,
+  review_count        BIGINT,
+  yelping_since       TIMESTAMP,
+  useful              BIGINT,
+  funny               BIGINT,
+  cool                BIGINT,
+  elite               STRING,
+  friends             STRING,
+  fans                BIGINT,
+  average_stars       DOUBLE,
+  compliment_hot      BIGINT,
+  compliment_more     BIGINT,
+  compliment_profile  BIGINT,
+  compliment_cute     BIGINT,
+  compliment_list     BIGINT,
+  compliment_note     BIGINT,
+  compliment_plain    BIGINT,
+  compliment_cool     BIGINT,
+  compliment_funny    BIGINT,
+  compliment_writer   BIGINT,
+  compliment_photos   BIGINT
+)
+USING DELTA
+CLUSTER BY (user_id)
+TBLPROPERTIES (
+  'delta.enableChangeDataFeed' = 'true',
+  'delta.autoOptimize.optimizeWrite' = 'true',
+  'delta.autoOptimize.autoCompact' = 'true'
+);
+
+CREATE TABLE IF NOT EXISTS yelp_dataset.silver.checkin (
+  business_id   STRING,
+  date          STRING
+)
+USING DELTA
+CLUSTER BY (business_id)
+TBLPROPERTIES (
+  'delta.enableChangeDataFeed' = 'true',
+  'delta.autoOptimize.optimizeWrite' = 'true',
+  'delta.autoOptimize.autoCompact' = 'true'
+);
+
+CREATE TABLE IF NOT EXISTS yelp_dataset.silver.tip (
+  user_id           STRING,
+  business_id       STRING,
+  text              STRING,
+  date              TIMESTAMP,
+  compliment_count  BIGINT
+)
+USING DELTA
+CLUSTER BY (business_id)
+TBLPROPERTIES (
+  'delta.enableChangeDataFeed' = 'true',
+  'delta.autoOptimize.optimizeWrite' = 'true',
+  'delta.autoOptimize.autoCompact' = 'true'
+);
+
+-- -----------------------------------------------------------------------------
+-- Camada GOLD: schema ja criado acima;
 -- -----------------------------------------------------------------------------

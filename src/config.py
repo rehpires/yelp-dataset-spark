@@ -15,6 +15,21 @@ GOLD_SCHEMA = "gold"
 
 DATASETS = ["business", "review", "user", "checkin", "tip"]
 
+# Disco local (rapido, efemero) do cluster para o kagglehub baixar o dataset
+# antes da copia para as Volumes. Sem isso, kagglehub usa por padrao o cache
+# em ~/.cache/kagglehub, que no Databricks fica escondido no home do driver.
+STAGING_DIR = "/local_disk0/tmp/kagglehub_staging"
+
+# Chave natural de cada dataset para o dedup (ROW_NUMBER) da bronze -> silver.
+# tip nao tem um id proprio no dataset original, entao a chave e composta.
+DEDUP_KEYS = {
+    "business": ["business_id"],
+    "review": ["review_id"],
+    "user": ["user_id"],
+    "checkin": ["business_id"],
+    "tip": ["user_id", "business_id", "date"],
+}
+
 
 def source_filename(dataset: str) -> str:
     return f"yelp_academic_dataset_{dataset}.json"
