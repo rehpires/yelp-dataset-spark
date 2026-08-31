@@ -1,0 +1,27 @@
+# Job/Workflow que encadeia os 3 notebooks de ingestao:
+# landing (kaggle -> Volumes) -> bronze (Delta com metadados) -> silver (dedup) -> gold (agregacoes e views).
+
+resources:
+  jobs:
+    yelp_pipeline:
+      name: yelp_dataset_pipeline
+
+      tasks:
+        - task_key: download_landing
+          notebook_task:
+            notebook_path: ${workspace.file_path}/src/download_landing
+          libraries:
+            - pypi:
+                package: kagglehub
+
+        - task_key: load_bronze
+          depends_on:
+            - task_key: download_landing
+          notebook_task:
+            notebook_path: ${workspace.file_path}/src/load_bronze
+
+        - task_key: load_silver
+          depends_on:
+            - task_key: load_bronze
+          notebook_task:
+            notebook_path: ${workspace.file_path}/src/load_silver

@@ -1,0 +1,12 @@
+bundle:
+  name: yelp-dataset-spark
+
+include:
+  - resources/*.yml
+
+targets:
+  dev:
+    mode: development
+    default: true
+    workspace:
+      host: https://dbc-e163c060-7817.cloud.databricks.com
