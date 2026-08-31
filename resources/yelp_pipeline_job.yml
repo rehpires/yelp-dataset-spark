@@ -10,9 +10,7 @@ resources:
         - task_key: download_landing
           notebook_task:
             notebook_path: ${workspace.file_path}/src/download_landing
-          libraries:
-            - pypi:
-                package: kagglehub
+          environment_key: kagglehub_env
 
         - task_key: load_bronze
           depends_on:
@@ -25,3 +23,10 @@ resources:
             - task_key: load_bronze
           notebook_task:
             notebook_path: ${workspace.file_path}/src/load_silver
+
+      environments:
+        - environment_key: kagglehub_env
+          spec:
+            client: "2"
+            dependencies:
+              - kagglehub
