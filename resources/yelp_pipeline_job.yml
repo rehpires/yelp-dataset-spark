@@ -24,6 +24,12 @@ resources:
           notebook_task:
             notebook_path: ${workspace.file_path}/src/load_silver
 
+        - task_key: load_gold
+          depends_on:
+            - task_key: load_silver
+          notebook_task:
+            notebook_path: ${workspace.file_path}/src/load_gold
+
       environments:
         - environment_key: kagglehub_env
           spec:

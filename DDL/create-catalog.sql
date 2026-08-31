@@ -270,5 +270,74 @@ TBLPROPERTIES (
 );
 
 -- -----------------------------------------------------------------------------
--- Camada GOLD: schema ja criado acima;
+-- Camada GOLD: modelagem dimensional simples para BI/Dashboard (dimensoes + metricas pre-agregadas)
+-- Populada pelo notebook src/load_gold.ipynb a partir da silver.
 -- -----------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS yelp_dataset.gold.dim_business (
+  business_id  STRING,
+  name         STRING,
+  city         STRING,
+  state        STRING,
+  categories   STRING,
+  is_open      BIGINT
+)
+USING DELTA
+CLUSTER BY (business_id)
+TBLPROPERTIES (
+  'delta.autoOptimize.optimizeWrite' = 'true',
+  'delta.autoOptimize.autoCompact' = 'true'
+);
+
+CREATE TABLE IF NOT EXISTS yelp_dataset.gold.dim_user (
+  user_id        STRING,
+  name           STRING,
+  yelping_since  TIMESTAMP
+)
+USING DELTA
+CLUSTER BY (user_id)
+TBLPROPERTIES (
+  'delta.autoOptimize.optimizeWrite' = 'true',
+  'delta.autoOptimize.autoCompact' = 'true'
+);
+
+-- Metrica: contagem de reviews e media de notas (stars) por business.
+CREATE TABLE IF NOT EXISTS yelp_dataset.gold.fact_business_metrics (
+  business_id   STRING,
+  review_count  BIGINT,
+  avg_stars     DOUBLE
+)
+USING DELTA
+CLUSTER BY (business_id)
+TBLPROPERTIES (
+  'delta.autoOptimize.optimizeWrite' = 'true',
+  'delta.autoOptimize.autoCompact' = 'true'
+);
+
+-- Metrica: contagem de reviews e de tips por usuario.
+CREATE TABLE IF NOT EXISTS yelp_dataset.gold.fact_user_metrics (
+  user_id       STRING,
+  review_count  BIGINT,
+  tip_count     BIGINT
+)
+USING DELTA
+CLUSTER BY (user_id)
+TBLPROPERTIES (
+  'delta.autoOptimize.optimizeWrite' = 'true',
+  'delta.autoOptimize.autoCompact' = 'true'
+);
+
+-- KPIs globais de uma linha so: total de reviews, usuarios, businesses e a
+-- media de tips por usuario (total de tips / total de usuarios).
+CREATE TABLE IF NOT EXISTS yelp_dataset.gold.summary_metrics (
+  total_reviews      BIGINT,
+  total_users        BIGINT,
+  total_businesses   BIGINT,
+  avg_tips_per_user  DOUBLE,
+  computed_at        TIMESTAMP
+)
+USING DELTA
+TBLPROPERTIES (
+  'delta.autoOptimize.optimizeWrite' = 'true',
+  'delta.autoOptimize.autoCompact' = 'true'
+);
