@@ -10,3 +10,9 @@ targets:
     default: true
     workspace:
       host: https://dbc-e163c060-7817.cloud.databricks.com
+
+  prod:
+    mode: production
+    default: false
+    workspace:
+      host: https://dbc-e163c060-7817.cloud.databricks.com
