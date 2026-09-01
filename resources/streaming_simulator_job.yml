@@ -1,6 +1,6 @@
 # Job separado do pipeline principal (yelp_pipeline_job.yml): gera carga
 # sintetica continua em bronze.review para streaming.
-# Disparo manual (databricks bundle run streaming_simulator) ou agendado --
+# Disparo manual (databricks bundle run streaming_simulator) ou agendado
 
 resources:
   jobs:

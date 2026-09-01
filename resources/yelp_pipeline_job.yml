@@ -7,7 +7,15 @@ resources:
       name: yelp_dataset_pipeline
 
       tasks:
+        - task_key: apply_ddl
+          notebook_task:
+            notebook_path: ${workspace.file_path}/src/apply_ddl
+            base_parameters:
+              ddl_path: ${workspace.file_path}/DDL/create-catalog.sql
+
         - task_key: download_landing
+          depends_on:
+            - task_key: apply_ddl
           notebook_task:
             notebook_path: ${workspace.file_path}/src/download_landing
           environment_key: kagglehub_env
