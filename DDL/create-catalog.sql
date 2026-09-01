@@ -399,5 +399,5 @@ TBLPROPERTIES (
   'delta.autoOptimize.autoCompact' = 'true'
 );
 
-ALTER TABLE yelp_dataset.silver.business ADD COLUMN IF NOT EXISTS rating_band STRING;
-ALTER TABLE yelp_dataset.gold.dim_business ADD COLUMN IF NOT EXISTS rating_band STRING;
+ALTER TABLE yelp_dataset.silver.business ADD COLUMNS (rating_band STRING);
+ALTER TABLE yelp_dataset.gold.dim_business ADD COLUMNS (rating_band STRING);
