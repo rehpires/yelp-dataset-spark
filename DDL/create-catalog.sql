@@ -40,6 +40,10 @@ COMMENT 'yelp_academic_dataset_checkin.json (JSON Lines)';
 CREATE VOLUME IF NOT EXISTS yelp_dataset.landing.tip
 COMMENT 'yelp_academic_dataset_tip.json (JSON Lines)';
 
+-- Checkpoints do Structured Streaming (src/streaming_consumer.ipynb).
+CREATE VOLUME IF NOT EXISTS yelp_dataset.gold.checkpoints
+COMMENT 'Checkpoint location das queries de Structured Streaming';
+
 -- -----------------------------------------------------------------------------
 -- Camada BRONZE: tabelas Delta com o schema real de cada dataset do Yelp.
 -- Campos aninhados/heterogeneos entre registros (attributes, hours, categories
@@ -341,3 +345,59 @@ TBLPROPERTIES (
   'delta.autoOptimize.optimizeWrite' = 'true',
   'delta.autoOptimize.autoCompact' = 'true'
 );
+
+-- Pivot: quantidade de business abertos/fechados por estado.
+CREATE TABLE IF NOT EXISTS yelp_dataset.gold.business_by_state (
+  state          STRING,
+  closed_count   BIGINT,
+  open_count     BIGINT
+)
+USING DELTA
+CLUSTER BY (state)
+TBLPROPERTIES (
+  'delta.autoOptimize.optimizeWrite' = 'true',
+  'delta.autoOptimize.autoCompact' = 'true'
+);
+
+-- Pivot: quantidade de reviews por mes, uma linha por ano.
+CREATE TABLE IF NOT EXISTS yelp_dataset.gold.review_by_month (
+  year  INT,
+  jan   BIGINT,
+  fev   BIGINT,
+  mar   BIGINT,
+  abr   BIGINT,
+  mai   BIGINT,
+  jun   BIGINT,
+  jul   BIGINT,
+  ago   BIGINT,
+  set   BIGINT,
+  out   BIGINT,
+  nov   BIGINT,
+  dez   BIGINT
+)
+USING DELTA
+CLUSTER BY (year)
+TBLPROPERTIES (
+  'delta.autoOptimize.optimizeWrite' = 'true',
+  'delta.autoOptimize.autoCompact' = 'true'
+);
+
+-- Sink do Structured Streaming: contagem de reviews e media de notas por
+-- business, agregada em janelas de 5 minutos sobre bronze.review (populada
+-- pelo simulador em src/streaming.ipynb). Ver src/streaming_consumer.ipynb.
+CREATE TABLE IF NOT EXISTS yelp_dataset.gold.review_activity_by_window (
+  business_id    STRING,
+  window_start   TIMESTAMP,
+  window_end     TIMESTAMP,
+  review_count   BIGINT,
+  avg_stars      DOUBLE
+)
+USING DELTA
+CLUSTER BY (business_id)
+TBLPROPERTIES (
+  'delta.autoOptimize.optimizeWrite' = 'true',
+  'delta.autoOptimize.autoCompact' = 'true'
+);
+
+ALTER TABLE yelp_dataset.silver.business ADD COLUMNS IF NOT EXISTS (rating_band STRING);
+ALTER TABLE yelp_dataset.gold.dim_business ADD COLUMNS IF NOT EXISTS (rating_band STRING);

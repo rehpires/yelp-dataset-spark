@@ -53,6 +53,10 @@ def gold_table(dataset: str) -> str:
     return f"{CATALOG}.{GOLD_SCHEMA}.{dataset}"
 
 
+def checkpoint_dir(query_name: str) -> str:
+    return f"/Volumes/{CATALOG}/{GOLD_SCHEMA}/checkpoints/{query_name}"
+
+
 BRONZE_SCHEMAS = {
     "business": StructType(
         [
