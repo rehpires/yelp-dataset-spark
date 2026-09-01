@@ -1,0 +1,13 @@
+# Job separado do pipeline principal (yelp_pipeline_job.yml): gera carga
+# sintetica continua em bronze.review para streaming.
+# Disparo manual (databricks bundle run streaming_simulator) ou agendado
+
+resources:
+  jobs:
+    streaming_simulator:
+      name: yelp_streaming_simulator # não faz dependência com o pipeline principal
+
+      tasks:
+        - task_key: run_simulator
+          notebook_task:
+            notebook_path: ${workspace.file_path}/src/streaming
