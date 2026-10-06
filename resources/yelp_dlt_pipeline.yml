@@ -1,0 +1,33 @@
+# Pipeline DLT (Lakeflow Declarative Pipelines) com toda a logica medallion em
+# SQL (src/dlt/*.sql). O DLT resolve as dependencias entre os datasets pelo
+# proprio SQL (bronze -> silver -> gold), sem depends_on manual.
+#
+# Execucao "triggered" (continuous: false): cada update processa o que chegou
+# na landing desde o ultimo checkpoint e encerra. Quem dispara sao os jobs
+# yelp_pipeline (carga inicial) e streaming_simulator (incrementos).
+#
+# Compute serverless: o Free Edition nao permite cluster classico, e o
+# serverless ja dimensiona os recursos automaticamente pela carga do update
+# (equivalente ao enhanced autoscaling, que em compute classico seria
+# clusters: [{label: default, autoscale: {min_workers, max_workers, mode: ENHANCED}}]).
+
+resources:
+  pipelines:
+    yelp_dlt:
+      name: yelp_dataset_dlt
+      catalog: yelp_dataset
+      schema: bronze
+      serverless: true
+      continuous: false
+      channel: CURRENT
+
+      libraries:
+        - glob:
+            include: ../src/dlt/**
+
+      # Event log publicado no Unity Catalog: fonte do Data Quality Report e
+      # das metricas de desempenho (src/monitoring/dq_report.sql).
+      event_log:
+        catalog: yelp_dataset
+        schema: governance
+        name: pipeline_event_log

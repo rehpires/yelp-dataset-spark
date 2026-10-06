@@ -1,13 +1,36 @@
-# Job separado do pipeline principal (yelp_pipeline_job.yml): gera carga
-# sintetica continua em bronze.review para streaming.
-# Disparo manual (databricks bundle run streaming_simulator) ou agendado
+# Job de carga incremental: o simulador (src/streaming.ipynb) grava um lote de
+# reviews (inserts + updates de nota) como arquivo JSON em
+# landing/review/incremental/ e, em seguida, o pipeline DLT processa so esse
+# lote via Auto Loader e consolida os updates via AUTO CDC.
+#
+# Disparo manual: databricks bundle run streaming_simulator.
+#
+# Sem overlap com yelp_pipeline: o simulador nao escreve em tabelas (so arquivos),
+# o pipeline so roda depois que o lote foi gravado (depends_on), uma execucao
+# por vez com fila, e sem full refresh.
 
 resources:
   jobs:
     streaming_simulator:
-      name: yelp_streaming_simulator # não faz dependência com o pipeline principal
+      name: yelp_streaming_simulator
+      max_concurrent_runs: 1
+      queue:
+        enabled: true
+
+      trigger:
+        pause_status: PAUSED
+        periodic:
+          interval: 1
+          unit: HOURS
 
       tasks:
         - task_key: run_simulator
           notebook_task:
             notebook_path: ${workspace.file_path}/src/streaming
+
+        - task_key: run_pipeline
+          depends_on:
+            - task_key: run_simulator
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.yelp_dlt.id}
+            full_refresh: false

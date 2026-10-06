@@ -14,14 +14,9 @@ SILVER_SCHEMA = "silver"
 GOLD_SCHEMA = "gold"
 
 DATASETS = ["business", "review", "user", "checkin", "tip"]
-
-# Disco local (rapido, efemero) do cluster para o kagglehub baixar o dataset
-# antes da copia para as Volumes. Sem isso, kagglehub usa por padrao o cache
-# em ~/.cache/kagglehub, que no Databricks fica escondido no home do driver.
 STAGING_DIR = "/local_disk0/tmp/kagglehub_staging"
 
-# Chave natural de cada dataset para o dedup (ROW_NUMBER) da bronze -> silver.
-# tip nao tem um id proprio no dataset original, entao a chave e composta.
+# Chave natural de cada dataset (KEYS do AUTO CDC em src/dlt/02_silver.sql).
 DEDUP_KEYS = {
     "business": ["business_id"],
     "review": ["review_id"],
@@ -42,6 +37,12 @@ def landing_file_path(dataset: str) -> str:
     return f"{landing_volume_dir(dataset)}/{source_filename(dataset)}"
 
 
+# Lotes do simulador (src/streaming.ipynb), capturados pelo Auto Loader do DLT
+# junto com o arquivo original, que fica na raiz do Volume.
+def landing_incremental_dir(dataset: str) -> str:
+    return f"{landing_volume_dir(dataset)}/incremental"
+
+
 # Definição das tabelas
 def bronze_table(dataset: str) -> str:
     return f"{CATALOG}.{BRONZE_SCHEMA}.{dataset}"
@@ -53,10 +54,7 @@ def gold_table(dataset: str) -> str:
     return f"{CATALOG}.{GOLD_SCHEMA}.{dataset}"
 
 
-def checkpoint_dir(query_name: str) -> str:
-    return f"/Volumes/{CATALOG}/{GOLD_SCHEMA}/checkpoints/{query_name}"
-
-
+# Espelhado no parametro schema => do read_files em src/dlt/01_bronze.sql.
 BRONZE_SCHEMAS = {
     "business": StructType(
         [

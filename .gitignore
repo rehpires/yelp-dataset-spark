@@ -17,3 +17,6 @@ landing/*
 
 # Databricks Asset Bundle local state/cache
 .databricks/
+
+# Relatório de entrega
+Relatório de Entrega/
